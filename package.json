@@ -1,0 +1,18 @@
+{
+  "name": "apiko_task",
+  "version": "1.0.0",
+  "description": "Test task for Apiko",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "author": "Olga Sakho",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.3.5",
+    "dotenv": "^16.0.3",
+    "node-cron": "^3.0.2",
+    "nodemon": "^2.0.22"
+  }
+}
