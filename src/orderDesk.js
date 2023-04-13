@@ -3,9 +3,9 @@ const fs = require('fs');
 
 require('dotenv').config();
 
-class NewOrdersInOrderDesk {
+class CrmSync { 
   static orders = [];
-  static apiUrl = 'https://app.orderdesk.me/api/v2/orders';
+  static apiUrl = process.env.API_URL;
   static config = {
     headers: {
       'ORDERDESK-API-KEY': process.env.ORDERDESK_API_KEY,
@@ -14,43 +14,28 @@ class NewOrdersInOrderDesk {
     }
   };
 
-  static async getLastOrders(time) {
-    const url = `${this.apiUrl}?search_start_date=${time}`;
+  static async getLastOrders(startTime, endTime) {
+    const url = `${this.apiUrl}?search_start_date=${startTime}&search_end_date=${endTime}`;
     const orderIds = await axios
         .get(url, this.config)
-        .then((response) => response.data.orders.map(order => order.id))
-        .catch((error) => console.log(error));
+        .then((response) => { return response.data.orders })
+        .catch((error) =>  console.error(error.message));
     return orderIds;
   }
 
-  static async getAddress(orderId) {
-    const url = `${this.apiUrl}/${orderId}`;
-    const address = await axios
-      .get(url, this.config)
-      .then((response) => {
-        const shippingInfo = response.data.order.shipping;
-        const { postal_code, address1, address2, address3, address4, city, state, country } = shippingInfo;
-        return `${(address1 || address2 || address3 || address4)} ${city} ${(state)} ${postal_code} ${country}`.replaceAll(/\s+/g, ' ').trim();
-      })
-      .catch((error) => console.log(error));
-    return address;
-  }
-
-  static async ordersSync() {
-    const time = new Date(new Date(Date.now()).toUTCString()).toISOString().slice(0, 10);
-
-    const newOrders = await this.getLastOrders(time);
-
+  static async ordersSync(time) {
+    const startTime = new Date(new Date(Date.now(time) - 60 * 60 * 1000).toUTCString()).toISOString();
+    const newOrders = await this.getLastOrders(startTime, time);
     try {
-        if (newOrders.length > 0) {
-            for (const orderId of newOrders) {
-                const shippingAddress = await this.getAddress(orderId);
-                const output = `OrderId: ${orderId}, Shipping address: ${JSON.stringify(shippingAddress)}`;
-                console.log(output)
-                this.orders.push(output);
+        if (!newOrders) {
+          throw new Error('Request failed with status code 401')  
+        } else if (newOrders.length > 0) {
+            for (const order of newOrders) {
+              const shippingInfo = order.shipping;
+              const output = `OrderId: ${order.id}, Shipping address: ${shippingInfo?.address1} ${shippingInfo?.address2} ${(shippingInfo?.address3 || shippingInfo?.address4)} ${shippingInfo?.city} ${shippingInfo.state} ${shippingInfo?.postal_code} ${shippingInfo?.country}`;
+              console.log(output)
+              fs.appendFileSync("logs.txt",` ${output}\n`);
             }
-            fs.writeFileSync("logs.txt",` ${this.orders} `);
-              
         } else {
             console.log('No new orders at this time.');
         }
@@ -58,10 +43,6 @@ class NewOrdersInOrderDesk {
       console.log(error);
     }
   }
-
-  static start () {
-    this.ordersSync(); 
-  }
 }
 
-module.exports = NewOrdersInOrderDesk;
+module.exports = CrmSync;

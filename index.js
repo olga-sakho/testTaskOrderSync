@@ -1,11 +1,13 @@
 var cron = require('node-cron');
-const NewOrdersInOrderDesk = require('./src/orderDesk.js');
+const CrmSync = require('./src/orderDesk.js');
+const timeNow = new Date(new Date(Date.now()).toUTCString()).toISOString()
 
 //script runs every hour
-// cron.schedule('0 * * * *', () => {
-//     console.log('working')
-//     NewOrdersInOrderDesk.start();
-// });
+cron.schedule('0 * * * *', () => {
+    const time = new Date(new Date(Date.now()).toUTCString()).toISOString()
+    console.log('working')
+    CrmSync.ordersSync(time);
+});
 
 //script runs immediately
-NewOrdersInOrderDesk.start();
+// CrmSync.ordersSync(timeNow);
