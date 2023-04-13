@@ -6,6 +6,5 @@ How to run the application:
 
   3. Run command: npm run start
 
-The app is ready)
 
 The script runs executed hourly, if you need to run it immediately, you need to uncomment the line in the index.js file.
