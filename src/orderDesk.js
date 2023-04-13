@@ -4,7 +4,6 @@ const fs = require('fs');
 require('dotenv').config();
 
 class CrmSync { 
-  static orders = [];
   static apiUrl = process.env.API_URL;
   static config = {
     headers: {
